@@ -1,6 +1,6 @@
 import processing.pdf.*;
 //import gifAnimation.*;
-
+int Over=0;
 float noise_scale = 0.01;
 float force_scale = 1;
 int RANGE = 100;
@@ -202,17 +202,35 @@ void draw_and_update() {
     // // gifExport.addFrame();
     //}
   } else {
+    
     endRecord();
-       
+    if(Over==0)
+    {
+      lose.play();
+      Over=1;
+    }
+    imageMode(CENTER);
+    perlin.resize(width,height);
+    image(perlin,width/2,height/2);
+    imageMode(CORNER);
     fill(255,0,0);
     textFont(mono1);
     //text("Can you catch the killer?",width/8+550,height/4+300);
     text("Can you catch the killer?",width/2-220,height/4+300);
-    fill(152, 251, 152);
-    rect(width/2-50,height/4+350, 150, 60, 60);
+    
+    fill(255,127, 127);
+    rect(width/2-200,height/4+350, 150, 60, 60);
     fill(0);
    // textFont(mono);
-    text("Solve!", width/2-30, height/4+350+45);
+    text("About", width/2-185, height/4+350+45);
+    
+    
+    fill(152, 251, 152);
+    rect(width/2+100,height/4+350, 150, 60, 60);
+    fill(0);
+   // textFont(mono);
+    text("Start!", width/2+115, height/4+350+45);
+   
     //if (make_gif) {
     //    gifExport.setDelay(7000);
     //    gifExport.addFrame();

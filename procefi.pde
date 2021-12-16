@@ -1,10 +1,15 @@
 import processing.video.*;
-
+import processing.sound.*;
+SoundFile beep,theme,lose,win;
+int last_stage = 0;
+int aboutOver =0;
 // Step 1. Declare a Movie object.
 Movie movie1, movie2, movie3,stat;
 int killerTrigger = -1;
 int frameC = 0;
-
+int frameE = 0;
+int playO=0;
+int introOver =0;
 //LEGEND, CLUES(4)
 int legend =-1;
 int slide = 0;
@@ -25,7 +30,7 @@ Capture video;
 int locX, locY;
 PImage prevFrame, myst;
 float threshold=20;
-PImage enakshi, diary, news, docs,kid,eyes, intro, D1,D2,D3,D4,D5,D6,D7,D8,card;
+PImage enakshi, diary, news, docs,kid,eyes, intro, D1,D2,D3,D4,D5,D6,D7,D8,card,about,perlin,instruct,good,morse,ev1,finger,lift,ev3,ev4,access,speak,ev2;
 PFont mono;
 int clueLog=0;
 int proceedClue=0;
@@ -45,9 +50,13 @@ void setup() {
   fullScreen();
   background(5);
 
-
+  beep = new SoundFile(this, "beep.wav");
+   theme = new SoundFile(this, "sound.mp3");
+   lose = new SoundFile(this, "lose.mp3");
+   win = new SoundFile(this, "win.mp3");
+  theme.loop();
   printArray(Serial.list());
-  String portname=Serial.list()[6];
+  String portname=Serial.list()[7];
   println(portname);
   myPort = new Serial(this, portname, 9600);
   myPort.clear();
@@ -61,15 +70,28 @@ void setup() {
   movie2 = new Movie(this, "2.mp4");
   movie3 = new Movie(this, "3.mp4");
   stat = new Movie(this, "glitch.mp4");
+   ev1 = loadImage("ev1.png");
+   finger = loadImage("5.png");
+   lift = loadImage("lift.png");
+    ev2 = loadImage("ev2.png");
   myst = loadImage("myst.jpeg");
   diary = loadImage("diary.png");
-  enakshi = loadImage("enakshi.jpeg");
+  ev3 = loadImage("ev3.png");
+//ev4 = loadImage("ev4.png");
+access = loadImage("access.png");
+speak = loadImage("speak.png");
+  enakshi = loadImage("enakshi.png");
+   good = loadImage("good.png");
   docs = loadImage("docs.png");
+  perlin = loadImage("perlin.png");
   news = loadImage("news.png");
   kid = loadImage("kid.png");
   eyes = loadImage("eyes.png");
   intro = loadImage("intro.png");
   card = loadImage("card.png");
+  morse = loadImage("morse.png");
+about = loadImage("about.png");
+instruct = loadImage("instruct.png");
  D1 = loadImage("D1.png");
  D2 = loadImage("D2.png");
  D3 = loadImage("D3.png");
@@ -89,11 +111,76 @@ void movieEvent(Movie movie) {
 }
 
 void draw() {
+  //print("aboutOver: ");
+  // println(aboutOver);
+  //print("clueLog: ");
+  // println(clueLog);
+   print("legend: ");
+  println(legend);
+  if(clueLog>=1)
+  {
+    imageMode(CENTER);
+    background(0);
+    if(clueLog==1)
+    {
+      tint(255, 255);
+      image(diary, width/2,height/2);
+      textSize(27);
+      fill(152, 251, 152);
+      rect(1300, 860, 130, 40, 30);
+      fill(0);
+      text("Next", 1330, 890);
+    }
+    else if (clueLog==2)
+    {
+          image(news, width/2,height/2);
+      textSize(27);
+      fill(152, 251, 152);
+    rect(1300, 860, 130, 40, 30);
+    fill(0);
+    text("Next", 1330, 890);
+     fill(255,127, 127);
+    rect(20, 860, 130, 40, 30);
+    fill(0);
+    text("Back", 50, 890);
+    }
+     else if (clueLog==3)
+    {
+
+    
+    imageMode(CENTER);
+      image(kid, width/2,height/2);
+      textSize(27);
+       fill(152, 251, 152);
+    rect(1300, 860, 130, 40, 30);
+    fill(0);
+    text("Next", 1330, 890);
+     fill(255,127, 127);
+    rect(20, 860, 130, 40, 30);
+    fill(0);
+    text("Back", 50, 890);
+    }
+     else if (clueLog==4)
+    {
+      image(docs,width/2,height/2);
+      textSize(27);
+       fill(152, 251, 152);
+    rect(1190, 860, 250, 40, 30);
+    fill(0);
+    text("Back to choosing", 1210, 890);
+     fill(255,127, 127);
+    rect(20, 860, 130, 40, 30);
+    fill(0);
+    text("Back", 50, 890);
+    }
+  }
+  else
+  {
   legend();
-   print("guess: ");
-  println(guess);
-  print("killerTrigger: ");
-  println(killerTrigger);
+  // print("guess: ");
+  //println(guess);
+  //print("killerTrigger: ");
+  //println(killerTrigger);
   if(diaryClue==400 && lockClue==400 && newsClue==400 && kidClue==400)
   {
      chooseKiller();
@@ -105,12 +192,14 @@ void draw() {
   
   print("legend: ");
   println(legend);
-   print("kid: ");
-  println(kidClue, diaryClue,newsClue,lockClue);
+  // print("kid: ");
+  //println(kidClue, diaryClue,newsClue,lockClue);
 
 
   if (legend==4)
   {
+    if(frameE<300)
+    {
     background(0);
     if (video.available()) {
       prevFrame.copy(video, 0, 0, width, height, 0, 0, width, height);
@@ -142,44 +231,95 @@ void draw() {
         }
       }
     }
-    float avgMotion=totalMotion/pixels.length;
+    float avgMotion=0;
+    avgMotion=totalMotion/pixels.length;
     video.updatePixels();
     prevFrame.updatePixels();
     updatePixels();
-
+    
+    
 
     fill(253, 208, 23);
 
 
     textSize(30);
-    text("  Explore this scene to \n  get a full look of the \n Enakshi. Here's some\n     things the people\n           speak of her: ", 1100, 200);
-    fill(255, 0, 0);
-    text("\n             1.Anklets\n          2.Humming\n    3.Red eyes of anger\n            4.Long hair\n  \n       ", 1100, 365);
-    fill(253, 208, 23);
-    text("          Look and run!\n    Because there's been \n      another murder in\n     Medikeru, detective!", 1100, 570);
+  
+    text("Wave through the fog\n   to see Enakshi! ", 1100, 365);
+    
 
-    fill(152, 251, 152);
+   
+    frameE++;
+    }
+    else
+    {
+        background(0);
+    imageMode(CENTER);
+     image(good,width/2,height/2);
+    imageMode(CORNER);
+  
+     fill(152, 251, 152);
     rect(1300, 860, 130, 40, 30);
     fill(0);
-    text("Solve!", 1325, 890);
-    fill(152, 251, 152);
-    rect(20, 860, 250, 40, 30);
-    fill(0);
-    text("Back to Legend", 40, 890);
+    text("Next", 1330, 890);
+     
+    }
+    //if(avgMotion>80)
+    //{
+    // background(0);
+    // while(frameE<400)
+    // {
+    //  background(0);
+    //fill(#FFDD17);
+    //textSize(80);
+    //text("Good job, Detective! You were able to take a \nlook and escape in time.", 100, height/2);
+    // 
+    // textSize(30);
+    //}
+    //if(frameE>=400)
+    //{
+    //  legend++;
+    ////  frameE=100;
+     
+    //}
+   
+    
+    
   }
 
  
 }
 }
-
+}
 
 
 
 void legend() {
   
+  if(legend==-2)
+  {
+    aboutOver=0;
+    pushMatrix();
+    background(0);
+    imageMode(CENTER);
+    image(about,width/2,height/2);
+    popMatrix();
+    imageMode(CORNER);
+    fill(152, 251, 152);
+    rect(1300, 860, 130, 40, 30);
+    fill(0);
+    text("Back", 1330, 890);
+  }
+  
   if(legend==-1)
   {
-     draw_and_update();
+    if (aboutOver==1) 
+    {
+      
+      background(0); 
+      aboutOver=0;
+    }
+
+    draw_and_update();
     textFont(mono2);
     fill(0,30);
     stroke(#ff7b7b);
@@ -205,7 +345,7 @@ void legend() {
     rect(0, 0, width, 150);
     fill(253, 208, 23);
 
-    text("It was 1864, when the Raman family moved to the temple town of Medikeru. The town was devoted\n   to their temple - the 'Karalore Devi' temple and workshipped the deity of the temple will utmost\n            devotion. As a tradition, the townsfolk made sure to donate to the temple annually. ", 60, 780);
+    text("It was 1864, when the Raman family moved to the temple town of Medikeru. The town was devoted\n   to their temple - the 'Karalore Devi' temple and workshipped the deity of the temple will utmost\n            devotion. As a tradition, the townsfolk made sure to donate to the temple annually. ", 60, 740);
     fill(152, 251, 152);
     rect(1300, 860, 130, 40, 30);
     fill(0);
@@ -223,12 +363,12 @@ void legend() {
     rect(0, 700, width, height);
     rect(0, 0, width, 150);
     fill(253, 208, 23);
-    text("The people went around collecting money from the residents for the temple. However, the head of\n the Raman family refused to give money, and proceeded to mock them for the tradition. But soon..", 60, 780);
+    text("The people went around collecting money from the residents for the temple. However, the head of\n the Raman family refused to give money, and proceeded to mock them for the tradition. But soon..", 60, 740);
     fill(152, 251, 152);
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+    fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -245,15 +385,15 @@ void legend() {
     rect(0, 700, width, height);
     rect(0, 0, width, 150);
     fill(253, 208, 23);
-    text("Enakshi came for him. They were angered by the disrespect. They are supernatural creatures who are\n      known to kill with their gaze - their doe-shaped eyes turn blood red when they are angered and \n        they kill within seconds. Soon, the man was killed. In the following years, the family devoted\n                                            themselves to Enakshi and donated money without fail.", 50, 765);
+    text("Enakshi came for him. She was angered by the disrespect. She is a supernatural creature who is\n      known to kill with her gaze - her doe-shaped eyes turn blood red when she is angered and \n        she kills within seconds. Soon, the man was killed. In the following years, the family devoted\n                                            themselves to Enakshi and donated money without fail.", 50, 740);
     fill(255, 0, 0);
-    text("Enakshi", 50, 764);
+    text("Enakshi", 50, 740);
 
     fill(152, 251, 152);
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+    fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -261,7 +401,7 @@ void legend() {
 
   if (legend==3 )
   {
-    movie3.stop();
+    
     video = new Capture(this, width, height);
     video.start();
     prevFrame=createImage(width, height, RGB);
@@ -277,10 +417,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
-    rect(20, 860, 130, 40, 30);
-    fill(0);
-    text("Back", 50, 890);
+    
     
   }
   
@@ -293,7 +430,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+    fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -309,7 +446,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+    fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -324,7 +461,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+    fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -340,7 +477,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+    fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -355,7 +492,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+    fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -370,7 +507,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+    fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -385,7 +522,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+   fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -401,7 +538,7 @@ void legend() {
     rect(1300, 860, 130, 40, 30);
     fill(0);
     text("Next", 1330, 890);
-    fill(21, 105, 199);
+   fill(255,127, 127);
     rect(20, 860, 130, 40, 30);
     fill(0);
     text("Back", 50, 890);
@@ -418,38 +555,120 @@ void legend() {
     text("             Detective, I kill people, but this time, it's not me. \n Something's not right. Here's something I found that can help you!", 20, height/2-40);
     textSize(32);
     fill(130, 0, 0);
-    text("psssst.... Keep your eyes and ears open! It's all in the notes", 300, height/2+300);
 
+   fill(152, 251, 152);
+    rect(1300, 860, 130, 40, 30);
+    fill(0);
+    text("Next", 1330, 890);
+  }
+  
+    if (legend==15 )
+  {
+    background(5);
+    imageMode(CENTER);
+    tint(255,255);
+    image(morse,width/2,height/2);
+        introOver=1;
+    imageMode(CORNER);
+    fill(255,127, 127);
+    
+    rect(1290, 860, 150, 40, 30);
+    fill(0);
+    text("Solved!", 1320, 890);
+    
+  }
+   if (legend==16 )
+  {
+    background(5);
+    imageMode(CENTER);
+    tint(255,255);
+    image(finger,width/2,height/2);
+    
+    imageMode(CORNER);
+
+    
+  }
+   if (legend==18 )
+  {
+    background(5);
+    imageMode(CENTER);
+    tint(255,255);
+    image(ev2,width/2,height/2);
+    
+    imageMode(CORNER);
+
+    
+  }
+  
+  
+  //kid one
+  if (legend==19 )
+  {
+    background(5);
+    imageMode(CENTER);
+    tint(255,255);
+    image(ev3,width/2,height/2);
+    
+    imageMode(CORNER);
+
+    
+  }
+  //card one
+  if (legend==21 )
+  {
+    background(5);
+    imageMode(CENTER);
+    tint(255,255);
+    image(lift,width/2,height/2);
+    
+    imageMode(CORNER);
+
+    
+  }
+  
+  if (legend==45 )
+  {
+    movie3.stop();
+    background(5);
+    imageMode(CENTER);
+    image(instruct,width/2,height/2);
+    imageMode(CORNER);
+    fill(152, 251, 152);
+    rect(1300, 860, 130, 40, 30);
+    fill(0);
+    text("View!", 1330, 890);
+   
+  
   }
 }
 
 void solve()
 {
   //table page
-  if (soln==0)
-  {
-    //if(diaryClue==500)diaryClue=400;
-    // if(newsClue==500)newsClue=400;
-    //  if(lockClue==500)lockClue=400;
+  //if (soln==0)
+  //{
+  //  //if(diaryClue==500)diaryClue=400;
+  //  // if(newsClue==500)newsClue=400;
+  //  //  if(lockClue==500)lockClue=400;
     
-    background(5);
-    tint(255, 90);
-    image(myst, 90, height/2-330);
-    fill(253, 208, 23);
-    textSize(48);
-    text("On the table in front of you, there are items acquired from the\n  murder scene. Inspect them and find clues to figure out who\n                                       the murderer is... ", 20, height/2-40);
-    //fill(21, 105, 199);
-    //rect(300, 720, 200, 50, 30);
-    //fill(0);
-    //textSize(40);
-    //text("Hints", 350, 760);
-    //fill(152, 251, 152);
-    //rect(920, 720, 200, 50, 30);
-    //fill(0);
-    //text("Clue Log", 940, 760);
+  //  background(5);
+  //  tint(255, 90);
+  //  image(myst, 90, height/2-330);
+  //  fill(253, 208, 23);
+  //  textSize(48);
+  //  text("On the table in front of you, there are items acquired from the\n  murder scene. Inspect them and find clues to figure out who\n                                       the murderer is... ", 20, height/2-40);
+  //  //fill(21, 105, 199);
+  //  //rect(300, 720, 200, 50, 30);
+  //  //fill(0);
+  //  //textSize(40);
+  //  //text("Hints", 350, 760);
+  //  //fill(152, 251, 152);
+  //  //rect(920, 720, 200, 50, 30);
+  //  //fill(0);
+  //  //text("Clue Log", 940, 760);
 
-    //guess who
-  }
+  //  //guess who
+  //}
 
 
   ////cluelog
@@ -503,13 +722,13 @@ void solve()
   if (diaryClue==1)
   {
     background(0);
-    fill(253, 208, 23);
-    textSize(48);
-    text("         Congratulations, you found the diary of the victim! \n  Your detective instincts are telling you to look out for a pen\n             and scribble over the paper to find old imprints!", 20, height/2-40);
+    imageMode(CENTER);
+    image(ev1,width/2,height/2);
+    imageMode(CORNER);
     fill(152, 251, 152);
-    rect(width/2-70, 700, 170, 50, 30);
+    rect(1300, 860, 130, 40, 30);
     fill(0);
-    text("Solve!", width/2-50, 740);
+    text("Start!", 1320, 890);
   }
 
   //diarysolve
@@ -521,10 +740,17 @@ void solve()
 
       background(0);
       page++;
+      
+      textSize(28);
+      fill(253, 208, 23);
+      text("Rub your finger \n  across diary page",20,50);
     }
 
     if (page>=2)
     {
+      textSize(28);
+      //fill(253, 208, 23);
+      //text("Rub your finger \n  across diary page",20,50);
       diary.resize(1545/2, 2000/2);
       alpha=constrain(alpha,0,255);
       tint(255, alpha);
@@ -533,11 +759,13 @@ void solve()
 
     if (alpha>1)
     {
-      textSize(28);
+      //textSize(28);
+      //fill(253, 208, 23);
+      //text("Rub your finger \n  across diary page",20,50);
       fill(152, 251, 152);
       rect(1300, 860, 130, 40, 30);
       fill(0);
-      text("Proceed", 1320, 890);
+      text("Proceed", 1315, 890);
     }
   }
 
@@ -554,19 +782,21 @@ void solve()
     fill(152, 251, 152);
     rect(width-375, 700, 170, 50, 30);
     fill(0);
-    text("Proceed!", width-370, 740);
+    textSize(35);
+    text("Proceed!", width-355, 740);
   }
   //kid clue
   if (kidClue==1)
   {
     background(0);
-    fill(253, 208, 23);
-    textSize(42);
-    text("           Dear detective, The child of the victim would like\n                                         to speak to you.", 20, height/2-40);
-    fill(152, 251, 152);
-    rect(width/2-90, 700, 220, 60, 30);
+    imageMode(CENTER);
+    image(speak,width/2,height/2);
+    imageMode(CORNER);
+   fill(152, 251, 152);
+    rect(1300, 860, 130, 40, 30);
     fill(0);
-    text("Proceed!", width/2-70, 750);
+    textSize(28);
+    text("Proceed", 1315, 890);
   }
 
   //interview
@@ -577,9 +807,10 @@ void solve()
     tint(255);
     image(kid, 100, 70);
     fill(152, 251, 152);
-    rect(width-width/8, 800, 170, 50, 30);
+    rect(1300, 860, 130, 40, 30);
     fill(0);
-    text("Proceed!", width-width/8+30, 840);
+    textSize(28);
+    text("Proceed", 1315, 890);
   
   }
 
@@ -588,33 +819,33 @@ void solve()
   if (lockClue==1 && passLock!=1)
   {
     background(0);
-    fill(253, 208, 23);
-    background(0);
-    fill(253, 208, 23);
-    tint(255);
-    card.resize(1080/2, 1080/2);
-    image(card, 450, -20);
-    textSize(48);
-    text("     Detective, there's communication from your department.\n          Press the green button a certain number of times.\n              You should know the secret number, detective", 20, height/2);
+    imageMode(CENTER);
+    image(access,width/2,height/2);
+    imageMode(CORNER);
+    textSize(32);
     fill(152, 251, 152);
-    rect(width/2-70, 700, 170, 50, 30);
+    rect(width/2-60, 800, 130, 60, 30);
     fill(0);
-    text("Press", width/2-50, 740);
+    textSize(35);
+    text("Press", width/2-40, 840);
   }
 
 
   //DOCS
   if(passLock==1)
   {
+    
+    imageMode(CENTER);
     background(0);
     fill(253, 208, 23);
     tint(255);
     docs.resize(1545/3, 2000/3);
-    image(docs, 300, 100);
+    image(docs, width/2,height/2);
     fill(152, 251, 152);
     rect(width-width/8, 800, 170, 50, 30);
     fill(0);
-    text("Proceed!", width-width/8+30, 840);
+    textSize(32);
+    text("Proceed!", width-width/8+25, 840);
   
   }
 
@@ -649,10 +880,17 @@ void serialEvent(Serial myPort) {
       int values[]=int(split(s, ','));
 
 
-      if (values.length==10) {
+      if (values.length==11) {
+        int val = values[10];
         slide = values[9];
+        if(val ==1)
+          beep.play();   
+         
+
         if (values[0]==1 && values[1]==0)
         {
+          
+          if(legend==-2 || legend==-1) aboutOver=1;
           if(killerTrigger==2) 
           {
             guess = values[9];
@@ -664,14 +902,27 @@ void serialEvent(Serial myPort) {
             killerTrigger=2;
             background(0);
           }
-          
-          if (legend<15) legend++;
-          if (legend==15)
-          {
-            legend++;
-            soln=0;
-            solve();
-          } 
+          else if (clueLog==4)
+          {          
+            killerTrigger=2;
+            clueLog=-1;
+            background(0);
+          }
+          else if (clueLog>=1)
+          {          
+            clueLog++;
+          }
+          if (legend==2) legend=45;
+          else if(legend==45) legend=3;
+          else
+          if (legend<16) legend++;
+         
+          //else if (legend==16)
+          //{
+          //  legend++;
+          //  soln=0;
+          //  solve();
+          //} 
          
           
 
@@ -684,10 +935,10 @@ void serialEvent(Serial myPort) {
           } else if (proceedClue==1)
           {
 
-            soln=0;
+           // soln=0;
             diaryClue=400;
             proceedClue=0;
-            legend++;
+            legend=18;
           }
            if (kidClue==1)
           {
@@ -701,6 +952,7 @@ void serialEvent(Serial myPort) {
             soln=0;
             kidClue=400;
             interview=0;
+            legend=21;
           }
           if (newsClue==1)
           {
@@ -723,31 +975,35 @@ void serialEvent(Serial myPort) {
             soln=0;
             lockClue=400;
             passLock=0;
+            legend=22;
           }
           
         }
-        if (values[5]==0 && legend==14 && proceedClue!=1 && diaryClue!=400 && diaryClue!=500)
+        if (values[5]==1 && legend==16 && proceedClue!=1 && diaryClue!=400 && diaryClue!=500)
         {
           diaryClue=1;
           solve();
           soln=-1;
-          legend++;
+          legend=17;
         }
 
-        if (values[6]==0 && legend==17 && newsClue!=400 && newsClue!=500)
+        if (values[6]==0 && legend==18 && newsClue!=400 && newsClue!=500)
         {
           newsClue=1;
+          legend=19;
         }
 
-        if (values[7]==0 && legend==17 && lockClue!=400 && passLock!=1 && lockClue!=500)
+        if (values[7]==0 && legend==21 && lockClue!=400 && passLock!=1 && lockClue!=500)
         {
           lockClue=1;
+          legend=21;
         }
         
         //KID!!
-        if (values[8]==0 && legend==17 && kidClue!=400 && interview!=1 && kidClue!=500)
+        if (values[8]==0 && legend==19 && kidClue!=400 && interview!=1 && kidClue!=500)
         {
           kidClue=1;
+          legend=20;
         }
         
         
@@ -756,8 +1012,17 @@ void serialEvent(Serial myPort) {
         if (values[2]==1 && values[3]==0)
         {
            if (legend==4) legend=0;
-          if (legend<15) legend--;
-          
+           if (legend==15) legend++;
+          else if (legend<16) legend--;
+          if (killerTrigger==2)
+          {          
+            clueLog = 1;
+          }
+        
+          else if (clueLog>1)
+          {          
+            clueLog--;
+          }
           else if (soln>=0)
           {
             soln=911;
@@ -765,6 +1030,7 @@ void serialEvent(Serial myPort) {
           {
             soln++;
           } else if (proceedClue==1) diaryClue=1;
+          
           //else
           //{
           //  if (legend>=9)
@@ -776,7 +1042,7 @@ void serialEvent(Serial myPort) {
           //}
         }
 
-        if (values[4]>3)
+        if (values[4]>4)
         {
           dcount++;
           if (dcount%100==0)
@@ -786,7 +1052,8 @@ void serialEvent(Serial myPort) {
     }
 
 
-    myPort.write("\n");
+    myPort.write(int(introOver)+"\n");
+    
   }
   catch(RuntimeException e) {
     e.printStackTrace();
@@ -804,13 +1071,14 @@ void chooseKiller(){
     fill(152, 251, 152);
     rect(width/2-70, 700, 200, 70, 30);
     fill(0);
-    text("Choose!", width/2-50, 750);
+    text("Choose!", width/2-60, 750);
     killerTrigger = 1;
   }
   if(killerTrigger==2)
   {
     fill(0);
-    
+    background(0);
+    textSize(38);
     PImage img = loadImage("Choose murderer - "+slide+".png");
     img.resize(1366+50,768+50);
     imageMode(CENTER);
@@ -818,8 +1086,12 @@ void chooseKiller(){
     fill(152, 251, 152);
     rect(width/2+100, 60, 200, 70, 30);
     fill(0);
-    text("Choose!", width/2+125, 110);
+    text("Choose!", width/2+130, 110);
     //killerTrigger = 1;
+    fill(255,127, 127);
+    rect(width/2-195, 60, 200, 70, 30);
+    fill(0);
+    text("Clue Log", width/2-170, 110);
     
   }
 
@@ -828,14 +1100,20 @@ void chooseKiller(){
     if(guess == 6)
    {
     
-     background(0);
-     fill(#FFDD17);
+    background(0);
+    fill(#FFDD17);
     textSize(80);
     textAlign(CENTER);
+    theme.pause();
+    if(playO==0)
+    {
+      win.play();
+      playO=1;
+    }
     text("Well Done!!", width/2, height/2);
     fill(255);
     textSize(42);
-    text("Enakshi can sense that you have found the right killer..", width/2, height/2 + 80);
+    text("Enakshi can sense that you have found the right killer...", width/2, height/2 + 80);
     text("Now you can relax,\nShe is going to go and take care of it. There will be no need for arrests.", width/2, height/2 + 110);  
     fill(152, 251, 152);
     rect(width/2-100, height/2+300, 200, 70, 30);
@@ -849,10 +1127,8 @@ void chooseKiller(){
     //movie1.loop();
     //image(movie1, 100, 0);
        background(0);
-    
-   //  println("frame:");
-     
-    if(frameC<500)
+   
+    if(frameC<700)
     {
     textAlign(CENTER);
     
@@ -863,14 +1139,18 @@ void chooseKiller(){
     text("Uh oh", width/2, height/2);
     fill(255);
     textSize(30);
-    text("Seems like Enakshi senses that is the wrong answer..", width/2, height/2 + 80);
-    text("Enakshi doesn't like that.. she has waited long enough. Now she's going to take care of everyone.", width/2, height/2 + 110);
+    text("Seems like Enakshi senses that this is the wrong answer..", width/2, height/2 + 80);
+    text("Enakshi doesn't like that... She has waited long enough. Now she's going to take care of everyone.", width/2, height/2 + 110);
     } 
   // }
     //for (int i = 0; i<500; i++) {
     //if (frameCount - frame >= 5200 && frameCount - frame < 5800){
      if(frameC>=500 && frameC<600)
      {
+        theme.pause();
+   //  println("frame:");
+   if(frameC==500)
+    lose.play();
       background(0);
     image(eyes, width/2, height/4);
     fill(#FFDD17);
@@ -878,14 +1158,23 @@ void chooseKiller(){
     text("Starting with you...", width/2, height/2);
     
     }
+    if(frameC>=800){
+      background(0);
+     
+     exit();
+      
+    }
+    else
     if(frameC>=600){
       background(0);
-      println("im here");
+     
       stat.loop();
       image(stat, width/2, height/2);
       
     }
+    
     frameC++;
+    println(frameC);
       
     }
   }
