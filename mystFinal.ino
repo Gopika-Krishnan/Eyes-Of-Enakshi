@@ -9,6 +9,8 @@ const int slide = A0;
 int slideReading; 
 int killer;
 int last_stage;
+const int force1 = A1;
+const int force2 = A2;
 
 
 //int capacitance =0;
@@ -22,16 +24,32 @@ int newsR = 0;
 int lockR = 0;
 int kidR = 0;
 
+const int led = 8;
+int dotDelay = 300;
+bool button_pushed;
+bool prevButtonState;
+
+unsigned long startMillis;
+unsigned long currentMillis;
+int unsigned long period = dotDelay * 7;
+int introOver = 0;
+
+
 void setup() {
   // set pin modes
   pinMode(buttonPin1, INPUT);
   pinMode(buttonPin2, INPUT);
- 
+   pinMode(led, OUTPUT);
+   button_pushed = false;
+ startMillis = millis();
+
   Serial.begin(9600);
 
   Serial.println("0,0"); 
  slideReading = 0;
   killer = 0;
+  prevButtonState = LOW;
+
 }
 
 
@@ -42,35 +60,69 @@ void loop() {
   
  
 
-  while (Serial.available()) {
-    
+ while (Serial.available()) {
+ introOver = Serial.parseInt();
+
  if (Serial.read() == '\n') {
+   bool currentState = digitalRead(buttonPin2);
+   if (currentState == HIGH && currentState != prevButtonState) {
+      button_pushed = true;
+      digitalWrite(led, LOW);
+    }
+    prevButtonState = currentState;
+
+   
+   (void)analogRead(force1);
+   int forceValue1 = analogRead(force1);
+   forceValue1 = analogRead(force1);
+   
+    if(forceValue1 > 40){
+      kidR = 1;
+      
+    }
+    else{
+      kidR=0;
+    }
+   (void)analogRead(force2);
+    int forceValue2 = analogRead(force2);
+   forceValue2 = analogRead(force2);
+    if(forceValue2 > 40){
+      pin1R = 1;
+      
+    }
+    else{
+     pin1R = 0;
+    }
+(void)analogRead(slide);
   slideReading = analogRead(slide);
+  
    int bt1 = digitalRead(buttonPin1);
   int bt2 = digitalRead(buttonPin2);
-  pin1R = digitalRead(pin1);
+  //pin1R = digitalRead(pin1);
+  //pin1R = analogRead(force2);
   newsR = digitalRead(news);
   lockR = digitalRead(lock);
-  kidR = digitalRead(kid);
-  if(slideReading <= 620){
+  //kidR = digitalRead(kid);
+  slideReading = analogRead(slide);
+  if(slideReading <= 128){
     killer = 1;
   }
-  else if(slideReading <= 680){
+  else if(slideReading <= 255){
     killer = 2;
   }
-  else if(slideReading <= 740){
+  else if(slideReading <= 383){
     killer = 3;
   }
-  else if(slideReading <= 800){
+  else if(slideReading <= 511){
     killer = 4;
   }
-  else if(slideReading <= 860){
+  else if(slideReading <= 640){
     killer = 5;
   }
-  else if(slideReading <= 920){
+  else if(slideReading <= 767){
     killer = 6;
   }
-  else if(slideReading <= 980){
+  else if(slideReading <= 896){
     killer = 7;
   }
   else{
@@ -78,7 +130,14 @@ void loop() {
   }
 
   capacitance = readCapacitivePin(touchPin);
-  
+//      Serial.print(forceValue1);
+//      Serial.print(',');
+//      Serial.print(forceValue2);
+//      Serial.print(',');
+
+
+
+      
       Serial.print(bt1);
       Serial.print(',');
       Serial.print(pbt1);
@@ -97,12 +156,76 @@ void loop() {
       Serial.print(',');
       Serial.print(kidR);
       Serial.print(',');
-      Serial.println(killer);
-       
+      Serial.print(killer);
+       Serial.print(',');
  
   //delay(0.01);
   pbt1 = bt1;
   pbt2 = bt2;
+
+   if (button_pushed == false && introOver) {
+      //Serial.println("1");
+      currentMillis = millis();
+
+      if (currentMillis - startMillis <= period) {
+        digitalWrite(led, LOW);
+        Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 3) {
+        digitalWrite(led, HIGH);
+         Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 4) {
+        digitalWrite(led, LOW);
+         Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 7) {
+        digitalWrite(led, HIGH);
+         Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 8) {
+        digitalWrite(led, LOW);
+         Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 11) {
+        digitalWrite(led, HIGH);
+         Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 12) {
+        digitalWrite(led, LOW);
+         Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 13) {
+        digitalWrite(led, HIGH);
+         Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 14) {
+        digitalWrite(led, LOW);
+         Serial.println("0");
+
+      }
+      else if (currentMillis - startMillis <= period + dotDelay * 15) {
+        digitalWrite(led, HIGH);
+         Serial.println("0");
+
+      }
+
+      else {
+        startMillis = currentMillis;
+        Serial.println("1");
+      }
+
+  }
+  else{
+    Serial.println("0");
   }
 }
 
@@ -110,7 +233,7 @@ void loop() {
  
  
 
-}
+}}
 
 
 // readCapacitivePin
